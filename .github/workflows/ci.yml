@@ -38,6 +38,13 @@ jobs:
       with:
         name: build-files
         path: src/dist/
+    
+    - name: Notify Discord on failure
+      if: failure()
+      run: |
+        curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"❌ Build failed for ${{ github.ref }} by ${{ github.actor }}\"}"
 
   lint:
     runs-on: ubuntu-latest
@@ -59,6 +66,13 @@ jobs:
       run: |
         cd src
         npm run lint
+    
+    - name: Notify Discord on failure
+      if: failure()
+      run: |
+        curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"❌ Lint failed for ${{ github.ref }} by ${{ github.actor }}\"}"
 
   docs-check:
     runs-on: ubuntu-latest
@@ -72,3 +86,10 @@ jobs:
         test -d docs/roadmap || echo "⚠️ Missing docs/roadmap/"
         test -d docs/meetings || echo "⚠️ Missing docs/meetings/"
         test -d docs/marketing || echo "⚠️ Missing docs/marketing/"
+    
+    - name: Notify Discord on success
+      if: success()
+      run: |
+        curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"✅ CI passed for ${{ github.ref }}\"}"
