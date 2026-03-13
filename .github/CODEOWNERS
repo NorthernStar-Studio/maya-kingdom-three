@@ -1,0 +1,42 @@
+# Northern Star Studio - Code Owners
+# Defines who must review changes to specific parts of the codebase
+
+# Global fallback - Bin has ultimate authority
+* @binhu2208
+
+# Marketing & Research
+/docs/marketing/ @gabe
+/research/ @gabe
+
+# Game Design Documents
+/docs/gdd/ @hideo @shig
+
+# Technical Design
+/docs/tech/ @john @shig
+
+# Source Code
+/src/ @john @shig
+
+# Art & Assets
+/assets/ @yoshi @shig
+
+# QA & Testing
+/tests/ @sakura @shig
+/docs/qa/ @sakura @shig
+
+# CI/CD & DevOps
+/.github/workflows/ @macs @shig
+/.github/ @macs @shig
+
+# Project Management
+/docs/roadmap/ @shig
+/docs/meetings/ @shig
+
+# Root level docs
+README.md @shig @macs
+LICENSE @binhu2208
+CONTRIBUTING.md @shig
+
+# Infrastructure
+/scripts/ @john @macs
+/docker/ @john @macs
