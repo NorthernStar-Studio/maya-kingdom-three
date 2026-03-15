@@ -6,67 +6,74 @@ on:
   issues:
     types: [opened, closed, reopened, assigned]
   push:
-    branches: [main, develop]
+    branches: [main, develop, 'release/*']
   release:
     types: [published]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Notify Discord - PR Opened
       if: github.event_name == 'pull_request' && github.event.action == 'opened'
       run: |
         curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
           -H "Content-Type: application/json" \
-          -d "{\"content\":\"📋 PR #${{ github.event.pull_request.number }} opened by ${{ github.actor }}: ${{ github.event.pull_request.title }}\n\n<@1480605220428845266>, please update your DM session with this. If this affects the critical path, escalate immediately.\"}"
-    
+          -d "{\"content\":\"📋 PR #${{ github.event.pull_request.number }} opened by ${{ github.actor }}: ${{ github.event.pull_request.title }}\n\n@Shig, if this affects the critical path, escalate immediately.\"}"
+
     - name: Notify Discord - PR Merged
       if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
       run: |
         curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
           -H "Content-Type: application/json" \
-          -d "{\"content\":\"✅ PR #${{ github.event.pull_request.number }} merged by ${{ github.actor }}: ${{ github.event.pull_request.title }}\n\n<@1480605220428845266>, please update your DM session with this. If this affects the critical path, escalate immediately.\"}"
-    
+          -d "{\"content\":\"✅ PR #${{ github.event.pull_request.number }} merged by ${{ github.actor }}: ${{ github.event.pull_request.title }}\n\n@Shig, if this affects the critical path, escalate immediately.\"}"
+
     - name: Notify Discord - PR Closed (not merged)
       if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == false
       run: |
         curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
           -H "Content-Type: application/json" \
-          -d "{\"content\":\"❌ PR #${{ github.event.pull_request.number }} closed (not merged) by ${{ github.actor }}: ${{ github.event.pull_request.title }}\n\n<@1480605220428845266>, please update your DM session with this. If this affects the critical path, escalate immediately.\"}"
-    
+          -d "{\"content\":\"❌ PR #${{ github.event.pull_request.number }} closed (not merged) by ${{ github.actor }}: ${{ github.event.pull_request.title }}\n\n@Shig, if this affects the critical path, escalate immediately.\"}"
+
     - name: Notify Discord - Issue Opened
       if: github.event_name == 'issues' && github.event.action == 'opened'
       run: |
         curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
           -H "Content-Type: application/json" \
-          -d "{\"content\":\"🐛 Issue #${{ github.event.issue.number }} opened by ${{ github.actor }}: ${{ github.event.issue.title }}\n\n<@1480605220428845266>, please update your DM session with this. If this is a blocker or affects the critical path, escalate immediately.\"}"
-    
+          -d "{\"content\":\"🐛 Issue #${{ github.event.issue.number }} opened by ${{ github.actor }}: ${{ github.event.issue.title }}\n\n@Shig, if this is a blocker or affects the critical path, escalate immediately.\"}"
+
     - name: Notify Discord - Issue Closed
       if: github.event_name == 'issues' && github.event.action == 'closed'
       run: |
         curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
           -H "Content-Type: application/json" \
-          -d "{\"content\":\"✅ Issue #${{ github.event.issue.number }} closed by ${{ github.actor }}: ${{ github.event.issue.title }}\n\n<@1480605220428845266>, please update your DM session with this. If this affects the critical path, escalate immediately.\"}"
-    
+          -d "{\"content\":\"✅ Issue #${{ github.event.issue.number }} closed by ${{ github.actor }}: ${{ github.event.issue.title }}\n\n@Shig, if this affects the critical path, escalate immediately.\"}"
+
     - name: Notify Discord - Push to Main
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
           -H "Content-Type: application/json" \
-          -d "{\"content\":\"📝 ${{ github.actor }} pushed to main: ${{ github.event.head_commit.message }}\n\n<@1480605220428845266>, please update your DM session with this. If this affects the critical path, escalate immediately.\"}"
-    
+          -d "{\"content\":\"📝 ${{ github.actor }} pushed to main: ${{ github.event.head_commit.message }}\n\n@Shig, if this affects the critical path, escalate immediately.\"}"
+
     - name: Notify Discord - Push to Develop
       if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
       run: |
         curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
           -H "Content-Type: application/json" \
-          -d "{\"content\":\"📝 ${{ github.actor }} pushed to develop: ${{ github.event.head_commit.message }}\n\n<@1480605220428845266>, please update your DM session with this. If this affects the critical path, escalate immediately.\"}"
-    
+          -d "{\"content\":\"📝 ${{ github.actor }} pushed to develop: ${{ github.event.head_commit.message }}\n\n@Shig, if this affects the critical path, escalate immediately.\"}"
+
+    - name: Notify Discord - Push to Release Branch
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/')
+      run: |
+        curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"📝 ${{ github.actor }} pushed to ${{ github.ref_name }}: ${{ github.event.head_commit.message }}\n\n@Shig, if this affects the critical path, escalate immediately.\"}"
+
     - name: Notify Discord - Release Published
       if: github.event_name == 'release'
       run: |
         curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
           -H "Content-Type: application/json" \
-          -d "{\"content\":\"🎉 Release ${{ github.event.release.tag_name }} published by ${{ github.actor }}!\n\n<@1480605220428845266>, please update your DM session with this. Escalate any critical path concerns immediately.\"}"
+          -d "{\"content\":\"🎉 Release ${{ github.event.release.tag_name }} published by ${{ github.actor }}!\n\n@Shig, escalate any critical path concerns immediately.\"}"
