@@ -1,11 +1,21 @@
-## Maya Chen - The Estranged Sibling
-## Character class for the Warmth path protagonist.
-## Extends base Character with Maya-specific mechanics and starting state.
+## Maya Character Class (Warmth)
+##
+## Maya Chen represents Warmth & Love from the Warmth emotion family.
+## Her arc progresses through emotional states from Resentment to Resolution.
+##
+## Special Mechanics:
+## - Resonance: Playing 3+ cards from same family triggers bonus effects
+## - Emotional State: Progresses through Resentment → Curiosity → Conflict → Vulnerability → Understanding → Resolution
+## - Story Flags: Tracks memory orbs, letter reading, confrontation, and truth discovery
 
-class_name Maya
+class_name MayaCharacter
 extends Character
 
-## Maya's emotional state tracking
+## Character constants
+const CHARACTER_ID := "maya"
+const CHARACTER_NAME := "Maya Chen"
+
+## Emotional State enumeration - Maya's journey stages
 enum EmotionalState {
 	RESENTMENT,    ## Initial state - Shadow dominant
 	CURIOSITY,     ## Shadow/Warmth blend - player is questioning
@@ -15,7 +25,23 @@ enum EmotionalState {
 	RESOLUTION     ## Player-chosen endpoint
 }
 
+## Warmth-specific damage/effect types
+enum WarmthEffect {
+	NONE,
+	HEAL_OVER_TIME,    ## Healing applied over turns
+	SHIELD_GRANT,      ## Grant shield to self or ally
+	EMOTIONAL_BOOST,  ## Boost next card value
+	CLEAR_NEGATIVE,   ## Remove negative status
+	RESONANCE_BONUS   ## Bonus from emotion resonance
+}
+
+## Current emotional state
 var current_emotional_state: EmotionalState = EmotionalState.RESENTMENT
+var emotional_state_index: int = 0
+
+## Resonance tracking - when 3+ cards from same family are played
+var resonance_bonus_active: bool = false
+var last_resonance_family: int = 0  ## Using Character.EmotionFamily values
 
 ## Story progression flags
 var has_seen_memory_orb_1: bool = false
@@ -24,106 +50,119 @@ var has_confrontation_occurred: bool = false
 var knows_full_truth: bool = false
 var confrontation_path: String = ""
 
-## Resonance tracking
-var resonance_bonus_active: bool = false
-var last_resonance_family: Character.EmotionFamily = Character.EmotionFamily.NONE
+## Card tracking for resonance calculations
+var cards_played_this_turn: int = 0
 
-## Signals for story integration
-signal emotional_state_changed(from_state: EmotionalState, to_state: EmotionalState)
-signal resonance_triggered(family: Character.EmotionFamily)
-signal story_flag_changed(flag: String, value: bool)
+## Starting deck cache
+var _starting_deck_cache: Array[Card] = []
 
 func _init() -> void:
-	character_id = "maya_chen"
-	character_name = "Maya Chen"
+	## Set character identity
+	character_id = CHARACTER_ID
+	character_name = CHARACTER_NAME
 	description = "A ceramicist who inherited her grandmother's pottery studio. Estranged from her brother Leo for five years."
 	
 	## Maya starts with moderate health and capacity
 	max_health = 80
 	emotional_capacity = 3
+	max_energy = 3
 
-## Initialize Maya with her starting deck
-func initialize_maya() -> void:
-	initialize(_get_starting_deck())
+## Initialize Maya with her starting deck (called by game manager)
+func setup() -> void:
+	current_health = max_health
 	current_emotional_state = EmotionalState.RESENTMENT
+	_reset_story_flags()
+	
+	## Build starting deck
+	_build_starting_deck()
 
-## Get Maya's starting deck from DES-001B
-func _get_starting_deck() -> Array[Card]:
-	var cards: Array[Card] = []
-	
-	## 4x "Unfair Burden" (Resentment - basic Shadow card)
-	for i in range(4):
-		cards.append(_create_card("unfair_burden", "Unfair Burden", 
-			"Carry the weight of what should have been shared.", 
-			Card.CardType.EMOTION, Card.EmotionType.SADNESS, 2, 3))
-	
-	## 3x "What He Said" (Grief - replaying the argument)
-	for i in range(3):
-		cards.append(_create_card("what_he_said", "What He Said", 
-			"The words echo in your mind, over and over.", 
-			Card.CardType.EMOTION, Card.EmotionType.SADNESS, 2, 4))
-	
-	## 3x "Should Have Been Different" (Longing - idealized past)
-	for i in range(3):
-		cards.append(_create_card("should_have_been_different", "Should Have Been Different", 
-			"Remembering how things used to be.", 
-			Card.CardType.EMOTION, Card.EmotionType.SADNESS, 1, 3))
-	
-	## 2x "I Was Right" (Stubbornness - Fire/Shadow blend)
-	for i in range(2):
-		cards.append(_create_card("i_was_right", "I Was Right", 
-			"Certainty in being wronged. A heavy comfort.", 
-			Card.CardType.EMOTION, Card.EmotionType.ANGER, 2, 4))
-	
-	## 2x "Empty Studio" (Melancholy - loneliness)
-	for i in range(2):
-		cards.append(_create_card("empty_studio", "Empty Studio", 
-			"The kiln sits cold. The wheel turns no more.", 
-			Card.CardType.EMOTION, Card.EmotionType.SADNESS, 1, 2))
-	
-	## 1x "Grandmother's Hands" (Gratitude - Warmth anchor)
-	cards.append(_create_card("grandmothers_hands", "Grandmother's Hands", 
-		"Her hands shaped clay and lives. You carry that legacy.", 
-		Card.CardType.EMOTION, Card.EmotionType.JOY, 3, 5))
-	
-	return cards
+## Reset story flags for new run
+func _reset_story_flags() -> void:
+	has_seen_memory_orb_1 = false
+	has_read_letter = false
+	has_confrontation_occurred = false
+	knows_full_truth = false
+	confrontation_path = ""
+	resonance_bonus_active = false
 
-## Helper to create cards
-func _create_card(id: String, name: String, desc: String, type: Card.CardCardType, 
-				 emotion: Card.EmotionType, cost: int, value: int) -> Card:
-	var card = Card.new(id, name, desc)
-	card.card_type = type
-	card.emotion_type = emotion
-	card.cost = cost
-	card.value = value
-	return card
+## Build Maya's starting deck from DES-001B
+func _build_starting_deck() -> void:
+	var cards = MayaCards.get_starting_deck()
+	for card in cards:
+		card_manager.draw_pile.add_card(card) if card_manager else add_to_deck(card)
+	
+	## Shuffle the deck
+	shuffle_deck()
+
+## Add card to deck (if no card_manager)
+func add_to_deck(card: Card) -> void:
+	## Would be handled by deck system
+	pass
+
+## Shuffle the deck
+func shuffle_deck() -> void:
+	## Would use deck.shuffle()
+	pass
+
+## Override: Called at turn start
+override func _on_turn_start() -> void:
+	super._on_turn_start()
+	cards_played_this_turn = 0
+	_check_resonance()
 
 ## Update emotional state based on story choices
 func update_emotional_state(new_state: EmotionalState) -> void:
 	if new_state != current_emotional_state:
 		var old_state = current_emotional_state
 		current_emotional_state = new_state
+		emotional_state_index = new_state
 		emotional_state_changed.emit(old_state, new_state)
 
-## Check and trigger resonance
-func check_and_apply_resonance() -> Character.EmotionFamily:
-	var family = check_resonance()
+## Check for resonance (3+ cards from same family)
+func _check_resonance() -> bool:
+	## Simplified: check hand and active cards
+	var emotion_counts = _count_emotions_in_hand()
 	
-	if family != Character.EmotionFamily.NONE and family != last_resonance_family:
-		resonance_bonus_active = true
-		last_resonance_family = family
-		resonance_triggered.emit(family)
-	elif family == Character.EmotionFamily.NONE:
-		resonance_bonus_active = false
-		last_resonance_family = Character.EmotionFamily.NONE
+	for family in emotion_counts.keys():
+		if emotion_counts[family] >= 3:
+			resonance_bonus_active = true
+			last_resonance_family = family
+			resonance_triggered.emit(family)
+			return true
 	
-	return family
+	resonance_bonus_active = false
+	return false
 
-## Get resonance bonus value
+## Count emotions in hand
+func _count_emotions_in_hand() -> Dictionary:
+	var counts = {
+		Character.EmotionFamily.WARMTH: 0,
+		Character.EmotionFamily.SHADOW: 0,
+		Character.EmotionFamily.FIRE: 0,
+		Character.EmotionFamily.STORM: 0
+	}
+	
+	## Would iterate through hand cards
+	return counts
+
+## Get current resonance bonus value
 func get_resonance_bonus() -> int:
 	if resonance_bonus_active:
-		return 2  # +2 to card values when resonance active
+		return 2
 	return 0
+
+## Track card played for resonance
+func on_card_played(card: Card) -> void:
+	cards_played_this_turn += 1
+	
+	## Update emotion tracking
+	if card:
+		_track_emotion_from_card(card)
+
+## Track emotion family from card
+func _track_emotion_from_card(card: Card) -> void:
+	## Add status or track for resonance
+	pass
 
 ## Set story flags
 func set_story_flag(flag: String, value: bool) -> void:
@@ -139,125 +178,53 @@ func set_story_flag(flag: String, value: bool) -> void:
 	
 	story_flag_changed.emit(flag, value)
 
-## Check available endings based on current state
+## Get available endings based on current state
 func get_available_endings() -> Array[String]:
 	var endings: Array[String] = []
-	var dominance = get_emotion_dominance()
+	var dominance = _get_emotion_dominance()
 	
 	## Ending A: Reconciliation (Warmth 50%+)
-	if dominance["WARMTH"] >= 0.5 and has_confrontation_occurred and knows_full_truth:
+	if dominance.get("WARMTH", 0.0) >= 0.5 and has_confrontation_occurred and knows_full_truth:
 		endings.append("reconciliation")
 	
 	## Ending B: Acceptance (Shadow 40%+, no Fire 30%+)
-	if dominance["SHADOW"] >= 0.4 and dominance["FIRE"] < 0.3:
+	if dominance.get("SHADOW", 0.0) >= 0.4 and dominance.get("FIRE", 0.0) < 0.3:
 		endings.append("acceptance")
 	
 	## Ending C: Righteous Anger (Fire 50%+)
-	if dominance["FIRE"] >= 0.5:
+	if dominance.get("FIRE", 0.0) >= 0.5:
 		endings.append("righteous_anger")
 	
-	## Ending D: Uncertain Path (Balanced, no family 40%+)
-	if dominance["WARMTH"] < 0.4 and dominance["SHADOW"] < 0.4 and \
-	   dominance["FIRE"] < 0.4 and dominance["STORM"] < 0.4:
+	## Ending D: Uncertain Path (Balanced)
+	var max_dominance = 0.0
+	for family in dominance.values():
+		max_dominance = max(max_dominance, family)
+	
+	if max_dominance < 0.4:
 		endings.append("uncertain_path")
 	
 	return endings
 
-## Get state display name
+## Get emotion dominance percentages
+func _get_emotion_dominance() -> Dictionary:
+	## Simplified - would track actual card counts
+	return {
+		"WARMTH": 0.0,
+		"SHADOW": 0.0,
+		"FIRE": 0.0,
+		"STORM": 0.0
+	}
+
+## Get emotional state name
 func get_emotional_state_name() -> String:
 	return EmotionalState.keys()[current_emotional_state]
 
-## Reset for new encounter/reset
-func reset_for_new_encounter() -> void:
-	resonance_bonus_active = false
-	last_resonance_family = Character.EmotionFamily.NONE
-	emotional_capacity = 3  # Reset capacity
-
-## Apply card effect based on Maya's specific mechanics
-func apply_card_effect(card: Card, target: Node, damage_engine: Node) -> Dictionary:
-	var result = {
-		"damage_dealt": 0,
-		"healing": 0,
-		"shield": 0,
-		"special_effect": ""
-	}
-	
-	## Apply resonance bonus if active
-	var bonus = get_resonance_bonus()
-	
-	match card.id:
-		"unfair_burden":
-			## Basic Shadow - deal emotional damage
-			result["damage_dealt"] = card.value + bonus
-			_change_state_toward(EmotionalState.RESENTMENT)
-		
-		"what_he_said":
-			## Grief - heavy emotional damage
-			result["damage_dealt"] = card.value + bonus + 1
-			_change_state_toward(EmotionalState.CONFLICT)
-		
-		"should_have_been_different":
-			## Longing - set up for future combos
-			result["special_effect"] = "longing"
-			_change_state_toward(EmotionalState.CURIOSITY)
-		
-		"i_was_right":
-			## Stubbornness - fire damage
-			result["damage_dealt"] = card.value + bonus
-			_change_state_toward(EmotionalState.CONFLICT)
-		
-		"empty_studio":
-			## Melancholy - self-damage + defense
-			result["damage_dealt"] = card.value
-			result["shield"] = card.value
-			_change_state_toward(EmotionalState.RESENTMENT)
-		
-		"grandmothers_hands":
-			## Gratitude - healing + warmth
-			result["healing"] = card.value + bonus
-			_change_state_toward(EmotionalState.VULNERABILITY)
-		
-		## Warmth cards (unlocked through story)
-		"hopeful_heart":
-			result["healing"] = card.value + bonus + 2
-			_change_state_toward(EmotionalState.UNDERSTANDING)
-		
-		"family_love":
-			result["shield"] = card.value + bonus
-			result["special_effect"] = "love"
-			_change_state_toward(EmotionalState.VULNERABILITY)
-		
-		"conflicting_memory":
-			result["special_effect"] = "confusion"
-			_change_state_toward(EmotionalState.CURIOSITY)
-	
-	## Check for resonance after playing
-	check_and_apply_resonance()
-	
-	return result
-
-## Shift emotional state toward a target
-func _change_state_toward(target_state: EmotionalState) -> void:
-	var current_idx = int(current_emotional_state)
-	var target_idx = int(target_state)
-	
-	## Only progress, don't regress (unless it's resolution)
-	if target_idx > current_idx:
-		update_emotional_state(target_state)
-
-## Override to add Maya-specific turn start behavior
-func start_turn() -> void:
-	super.start_turn()
-	## Check for resonance at turn start
-	check_and_apply_resonance()
-
-## Get story state for debugging/display
+## Get debug state info
 func get_debug_state() -> Dictionary:
 	return {
 		"name": character_name,
 		"state": get_emotional_state_name(),
 		"health": "%d/%d" % [current_health, max_health],
-		"emotions": get_emotion_dominance(),
 		"resonance": resonance_bonus_active,
 		"flags": {
 			"memory_orb": has_seen_memory_orb_1,
@@ -266,3 +233,8 @@ func get_debug_state() -> Dictionary:
 			"knows_truth": knows_full_truth
 		}
 	}
+
+## Signals
+signal emotional_state_changed(from_state: EmotionalState, to_state: EmotionalState)
+signal resonance_triggered(family: int)
+signal story_flag_changed(flag: String, value: bool)
