@@ -35,6 +35,10 @@ var turn_count: int = 0
 var max_turns_per_round: int = 10
 var time_limit_seconds: int = 60
 
+func apply_config(config: GameConfig) -> void:
+	max_turns_per_round = config.max_turns_per_round
+	time_limit_seconds = config.time_limit_seconds
+
 func _ready() -> void:
 	_start_game()
 

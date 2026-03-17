@@ -11,6 +11,9 @@ signal hand_full
 
 var starting_hand_size: int = 5
 
+func apply_config(config: GameConfig) -> void:
+	starting_hand_size = config.starting_hand_size
+
 func _ready():
 	draw_pile = CardDeck.new()
 	discard_pile = CardDeck.new()
@@ -63,3 +66,56 @@ func _reshuffle_discard() -> void:
 			draw_pile.add_card(card)
 	draw_pile.shuffle()
 	deck_shuffled.emit()
+
+func get_progression_state() -> Dictionary:
+	return {
+		"draw_pile": _serialize_cards(draw_pile.cards),
+		"discard_pile": _serialize_cards(discard_pile.cards),
+		"hand": _serialize_cards(hand.hand),
+		"starting_hand_size": starting_hand_size
+	}
+
+func apply_progression_state(state: Dictionary, available_cards: Array[Card]) -> void:
+	if state.is_empty():
+		return
+	var card_lookup := _build_card_lookup(available_cards)
+	draw_pile.cards = _deserialize_cards(state.get("draw_pile", []), card_lookup)
+	discard_pile.cards = _deserialize_cards(state.get("discard_pile", []), card_lookup)
+	hand.hand = _deserialize_cards(state.get("hand", []), card_lookup)
+	starting_hand_size = int(state.get("starting_hand_size", starting_hand_size))
+
+func _serialize_cards(cards: Array) -> Array[Dictionary]:
+	var payload: Array[Dictionary] = []
+	for card in cards:
+		if card is Card:
+			payload.append({
+				"id": card.id,
+				"cost": card.cost,
+				"value": card.value
+			})
+	return payload
+
+func _deserialize_cards(payload: Array, lookup: Dictionary) -> Array[Card]:
+	var cards: Array[Card] = []
+	for entry in payload:
+		if entry is Dictionary:
+			var card_id = str(entry.get("id", ""))
+			var template: Card = lookup.get(card_id)
+			if template:
+				var restored := Card.new()
+				restored.id = template.id
+				restored.name = template.name
+				restored.description = template.description
+				restored.card_type = template.card_type
+				restored.emotion_type = template.emotion_type
+				restored.art_path = template.art_path
+				restored.cost = int(entry.get("cost", template.cost))
+				restored.value = int(entry.get("value", template.value))
+				cards.append(restored)
+	return cards
+
+func _build_card_lookup(cards: Array[Card]) -> Dictionary:
+	var lookup := {}
+	for card in cards:
+		lookup[card.id] = card
+	return lookup
