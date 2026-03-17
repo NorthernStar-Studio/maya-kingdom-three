@@ -27,11 +27,19 @@
 
 ---
 
-## Phase 2: Vertical Slice (Weeks 3-5)
+## Phase 2 Complete ✅ (Mar 17, 2026)
 
-| Task ID | Description | Assigned To | Status | Priority | Dependencies | Scheduled Start | Scheduled Finish | Actual Start | Actual Finish |
-|---------|-------------|-------------|--------|----------|--------------|-----------------|------------------|--------------|---------------|
-| DES-002 | Expand GDD: 3 characters, 60 cards | Hideo | ⚪ Ready | 🟡 High | Phase 1 complete | — | — | — | — |
+| Task ID | Description | Assigned To | Status | Delivered |
+|---------|-------------|-------------|--------|-----------|
+| DES-002 | 3 characters, 60 cards | Hideo | ✅ | docs/gdd/tide-character.md, wren-character.md, frost-character.md |
+| DEV-002 | 3 characters playable | John | ✅ | src/characters/maya/, ember/, wren/ |
+| ART-002 | 60 emotion cards | Yoshi | ✅ | assets/characters/, docs/gdd/ember-*.md |
+| QA-003 | Balance testing | Sakura | ✅ | tests/qa/balance-*.md |
+| MKT-001B | Steam page live | Gabe | ✅ | docs/marketing/steam-*.md |
+
+---
+
+## Phase 3: Production (Weeks 6-14)
 
 ### Status Legend
 - 🔴 Blocked — Needs escalation
