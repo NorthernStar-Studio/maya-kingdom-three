@@ -1,43 +1,65 @@
 ## Wren Character Package
 ##
-## Main entry point for loading Wren character and cards.
-## Use this to initialize Wren in your game.
+## Package entry point for loading Wren character and cards.
 
 class_name WrenPackage
-extends RefCounted
+extends CharacterPackage
 
-## Load and return all Wren cards
-static func load_cards() -> Array[Card]:
-	return WrenCardData.create_all_cards()
+func get_id() -> String:
+	return WrenCharacter.CHARACTER_ID
 
-## Load starter deck (Denial phase cards)
-static func load_starter_deck() -> Array[Card]:
-	return WrenCardData.get_starter_deck()
+func get_display_name() -> String:
+	return WrenCharacter.CHARACTER_NAME
 
-## Create a new Wren character instance
-static func create_character() -> WrenCharacter:
+func get_theme() -> String:
+	return "Grief, memory, and carrying loss forward"
+
+func get_summary() -> Dictionary:
+	return {
+		"id": get_id(),
+		"name": get_display_name(),
+		"theme": get_theme(),
+		"emotion_family": "Shadow",
+		"arc": "Learning to carry loss without being consumed by it",
+		"starting_health": 90,
+		"starting_energy": 3,
+		"starting_plays": 3,
+		"special_mechanics": [
+			"Memory Tokens - persist across encounters",
+			"Grief Counter - accumulates through combat",
+			"Phase Progression - cards unlock as emotional journey progresses",
+			"Echo Mechanic - repeat previous card effects"
+		],
+		"phases": ["Denial", "Weight", "Haunting", "Bargaining", "Shadows", "Wren"]
+	}
+
+func create_character() -> Character:
 	return WrenCharacter.new()
 
-## Create card effects handler
-static func create_card_effects() -> WrenCardEffects:
+func load_cards() -> Array[Card]:
+	return WrenCardData.create_all_cards()
+
+func load_starter_deck() -> Array[Card]:
+	return WrenCardData.get_starter_deck()
+
+func create_card_effects(_character: Character = null) -> Node:
 	return WrenCardEffects.new()
 
-## Create phase manager
-static func create_phase_manager(wren: WrenCharacter) -> WrenPhaseManager:
-	var manager = WrenPhaseManager.new()
-	manager.initialize(wren)
-	return manager
+func create_support_systems(character: Character = null) -> Dictionary:
+	var systems := {}
+	if character is WrenCharacter:
+		var phase_manager = WrenPhaseManager.new()
+		phase_manager.initialize(character)
+		systems["phase_manager"] = phase_manager
+	return systems
 
-## Get all card IDs
-static func get_all_card_ids() -> Array[String]:
-	var cards = load_cards()
+func get_all_card_ids() -> Array[String]:
 	var ids: Array[String] = []
-	for card in cards:
+	for card in load_cards():
 		ids.append(card.id)
 	return ids
 
-## Phase descriptions for UI
-static func get_phase_descriptions() -> Dictionary:
+func get_phase_descriptions() -> Dictionary:
 	return {
 		"DENIAL": {
 			"name": "Denial",
@@ -69,24 +91,4 @@ static func get_phase_descriptions() -> Dictionary:
 			"description": "Carrying memory forward",
 			"cards": ["Songbird", "Legacy", "Carry Forward"]
 		}
-	}
-
-## Character summary for UI
-static func get_character_summary() -> Dictionary:
-	return {
-		"id": "wren",
-		"name": "Wren",
-		"theme": "Grief & Memory",
-		"emotion_family": "Shadow",
-		"arc": "Learning to carry loss without being consumed by it",
-		"starting_health": 90,
-		"starting_energy": 3,
-		"starting_plays": 3,
-		"special_mechanics": [
-			"Memory Tokens - persist across encounters",
-			"Grief Counter - accumulates through combat",
-			"Phase Progression - cards unlock as emotional journey progresses",
-			"Echo Mechanic - repeat previous card effects"
-		],
-		"phases": ["Denial", "Weight", "Haunting", "Bargaining", "Shadows", "Wren"]
 	}
