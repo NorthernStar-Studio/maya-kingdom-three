@@ -4,7 +4,7 @@
 - **Project:** Maya Kingdom Three
 - **Proposal:** https://github.com/NorthernStar-Studio/maya-kingdom-three/blob/main/docs/marketing/MayaKingdomThree_Proposal.md
 - **Created:** 2026-03-22
-- **Status:** Draft
+- **Status:** Active
 
 ## Tasks
 
@@ -12,14 +12,14 @@
 
 | ID | Task | Role | Dependencies | Critical | Status |
 |----|------|------|--------------|----------|--------|
-| DES-001 | Game Design Document - Core mechanics | Hideo | None | Y | pending |
+| DES-001 | Game Design Document - Core mechanics | Hideo | None | Y | assigned |
 | DES-002 | Design 3 unique civ mechanics (Maya, Aztec, Inca) | Hideo | DES-001 | Y | pending |
 | DES-003 | Campaign map design - 3,000 year span | Hideo | DES-001 | Y | pending |
-| DEV-001 | Tech stack evaluation - cross-platform | John | None | Y | pending |
+| DEV-001 | Tech stack evaluation - cross-platform | John | None | Y | assigned |
 | DEV-002 | Prototype - turn-based combat system | John | DEV-001 | Y | pending |
-| ART-001 | Art direction document - visual style | Yoshi | None | Y | pending |
+| ART-001 | Art direction document - visual style | Yoshi | None | Y | assigned |
 | ART-002 | Character/faction concept art | Yoshi | ART-001 | N | pending |
-| MKT-001 | Market research - competitor analysis update | Gabe | None | N | pending |
+| MKT-001 | Market research - competitor analysis update | Gabe | None | N | assigned |
 | MKT-002 | Brand strategy - trilogy positioning | Gabe | None | N | pending |
 
 ### Phase 2: Production (Q4 2026 - Q3 2027)
