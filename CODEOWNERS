@@ -1,0 +1,20 @@
+# Default owner
+* @shig
+
+# Source code
+/src/ @john@northernstar.studio
+
+# Design documents
+/docs/gdd/ @hideo@northernstar.studio
+
+# Assets
+/assets/ @yoshi@northernstar.studio
+
+# Tests
+/tests/ @sakura@northernstar.studio
+
+# Marketing
+/docs/marketing/ @gabe@northernstar.studio
+
+# Roadmap
+/docs/roadmap/ @shig@northernstar.studio
