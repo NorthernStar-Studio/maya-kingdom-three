@@ -13,8 +13,8 @@
 | ID | Task | Role | Dependencies | Critical | Status |
 |----|------|------|--------------|----------|--------|
 | DES-001 | Game Design Document - Core mechanics | Hideo | None | Y | complete |
-| DES-002 | Design 3 unique civ mechanics (Maya, Aztec, Inca) | Hideo | DES-001 | Y | assigned |
-| DES-003 | Campaign map design - 3,000 year span | Hideo | DES-001 | Y | assigned |
+| DES-002 | Design 3 unique civ mechanics (Maya, Aztec, Inca) | Hideo | DES-001 | Y | complete |
+| DES-003 | Campaign map design - 3,000 year span | Hideo | DES-001 | Y | complete |
 | DEV-001 | Tech stack evaluation - cross-platform | John | None | Y | complete |
 | DEV-002 | Prototype - turn-based combat system | John | DEV-001 | Y | assigned |
 | ART-001 | Art direction document - visual style (3D) | Yoshi | None | Y | assigned |
